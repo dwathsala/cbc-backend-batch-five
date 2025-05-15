@@ -5,6 +5,8 @@ import productRouter from "./routes/productRoute.js";
 import userRouter from "./routes/userRoute.js";
 import { decode } from "jsonwebtoken";
 import jwd from "jsonwebtoken"
+import orderRouter from "./routes/orderRoute.js";
+
 
 
 const app = express();
@@ -48,10 +50,10 @@ mongoose.connect("mongodb+srv://admin:123@cluster0.spz2o.mongodb.net/?retryWrite
         console.log("Database connection failed");
     });
 
-// Connect to Student routes
-app.use("/products",productRouter);
 
+app.use("/products",productRouter);
 app.use("/users",userRouter);
+app.use("/orders",orderRouter)
 
 
 app.listen(5000, () => {

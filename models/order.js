@@ -29,8 +29,13 @@ const orderSchema = mongoose.Schema({
 
     status : {
         type : String,
-        requi : true,
+        required : true,
         default : "pending"
+    },
+
+    labelledTotal : {
+        type : Number,
+        required : true
     },
 
     total : {
@@ -70,7 +75,7 @@ const orderSchema = mongoose.Schema({
                 },
 
                 price : {
-                    type : String,
+                    type : Number,
                     required : true
                 }
             },
@@ -83,7 +88,7 @@ const orderSchema = mongoose.Schema({
 
     date : {
         type : Date,
-        default : Date,now
+        default : Date.now
     }
 
 })
