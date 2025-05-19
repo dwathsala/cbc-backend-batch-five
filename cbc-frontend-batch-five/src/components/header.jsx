@@ -11,3 +11,4 @@ export default function Header(){
     )
 }
 //function name should equal to tag that we will create
+//to change the text size in manually we use [] like in "text-[100px]"
