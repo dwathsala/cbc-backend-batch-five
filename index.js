@@ -3,13 +3,16 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import productRouter from "./routes/productRoute.js";
 import userRouter from "./routes/userRoute.js";
-import { decode } from "jsonwebtoken";
+//import { decode } from "jsonwebtoken";
 import jwd from "jsonwebtoken"
+import cors from "cors";
+
+const app = express();
 import orderRouter from "./routes/orderRoute.js";
 import reviewRouter from "./routes/reviewRoute.js";
 
-const app = express();
 
+app.use(cors()); //inside the cors we can write who can access the api --> example: localhost:5173
 app.use(bodyParser.json());
 
 app.use(
@@ -50,10 +53,10 @@ mongoose.connect("mongodb+srv://admin:123@cluster0.spz2o.mongodb.net/?retryWrite
     });
 
 
-app.use("/products",productRouter);
-app.use("/users",userRouter);
-app.use("/orders",orderRouter);
-app.use("/reviews", reviewRouter);
+app.use("/api/products",productRouter);
+app.use("/api/users",userRouter);
+app.use("/api/orders",orderRouter);
+app.use("/api/reviews", reviewRouter);
 
 app.listen(5000, () => {
     console.log("Server is running on port 5000");
