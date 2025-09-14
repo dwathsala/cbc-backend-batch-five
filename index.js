@@ -24,7 +24,7 @@ app.use(
             const token = tokenString.replace("Bearer ","")
             console.log(token)
 
-            jwd.verify(token, "cbc-batch5-2025", 
+            jwd.verify(token, process.env.JWT_KEY, 
                 (err,decoded)=>{
                     if(decoded != null){
                         console.log(decoded)
