@@ -4,8 +4,10 @@ import mongoose from "mongoose";
 import productRouter from "./routes/productRoute.js";
 import userRouter from "./routes/userRoute.js";
 //import { decode } from "jsonwebtoken";
-import jwd from "jsonwebtoken"
+import jwd from "jsonwebtoken";
 import cors from "cors";
+import dotenv from "dotenv"; 
+dotenv.config();
 
 const app = express();
 import orderRouter from "./routes/orderRoute.js";
@@ -44,7 +46,7 @@ app.use(
         //next()
     })
 
-mongoose.connect("mongodb+srv://admin:123@cluster0.spz2o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(process.env.MONGODBURL)
     .then(() => {
         console.log("Connected to the database");
     })
