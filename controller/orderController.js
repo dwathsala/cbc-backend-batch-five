@@ -99,7 +99,26 @@ export async function createOrder(req,res) {
         })
       }
 
-      
-
+    
       //create order objaect
+}
+export async function getOrders(req,res) {
+    //get user information
+    if(req.user == null){
+      res.status(403).json({
+          message : "Please login and try again"
+      })
+      return
+    }
+    try{
+      if(req.user.role != "admin"){
+        const orders = await Order.find({email : req.user.email});
+        res.json(orders)
+      }
+    }catch(err){
+      res.status(500).json({
+        message : "Failed to get orders",
+        error : err
+      })
+    }
 }
