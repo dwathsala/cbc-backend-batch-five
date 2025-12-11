@@ -99,7 +99,77 @@ export async function loginWithGoogle(req,res){
         }
     )  
     console.log(response.data); 
+
+    //to check user is already in database
+    const user = await User.findOne({
+        email : response.data.email
+    })
+
+    /*
+        email : {
+        type : String,
+        required : true,
+        unique : true
+    },
+
+    firstName : {
+        type : String,
+        required : true
+    },
+
+    lastName : {
+        type : String,
+        required : true
+    },
+
+    password : {
+        type : String,
+        required : true
+    },
+
+    role : {
+        type : String,
+        required : true,
+        default : "customer"
+    },
+
+    isBlocked : {
+        type : Boolean,
+        required : true,
+        default : false
+    },
+
+    img : {
+        type : String,
+        required : false,
+        default : "https://avatar.iran.liara.run/public/boy?username=Ash" 
+    } */
     
+    if(user == null){
+        const newUser = new User({
+            email : response.data.email,
+            firstName : response.data.given_name,
+            lastName : response.data.family_name,
+            password : "googleUser",
+            img : response.data.picture
+        })
+        await newUser.save();
+        const token = jwt.sign(
+            {
+                email : newUser.email,
+                firstName : newUser.firstName,
+                lastName : newUser.lastName,
+                role : newUser.role,
+                img : newUser.img
+            },
+            process.env.JWT_KEY
+        
+        )
+
+    }else{
+
+    }
+
 }
 
 export function isAdmin(req){
