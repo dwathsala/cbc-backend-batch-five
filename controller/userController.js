@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from "axios";
+import nodemailer from "nodemailer";
 dotenv.config();
 
 export function createUser(req,res){
@@ -104,46 +105,6 @@ export async function loginWithGoogle(req,res){
     const user = await User.findOne({
         email : response.data.email
     })
-
-    /*
-        email : {
-        type : String,
-        required : true,
-        unique : true
-    },
-
-    firstName : {
-        type : String,
-        required : true
-    },
-
-    lastName : {
-        type : String,
-        required : true
-    },
-
-    password : {
-        type : String,
-        required : true
-    },
-
-    role : {
-        type : String,
-        required : true,
-        default : "customer"
-    },
-
-    isBlocked : {
-        type : Boolean,
-        required : true,
-        default : false
-    },
-
-    img : {
-        type : String,
-        required : false,
-        default : "https://avatar.iran.liara.run/public/boy?username=Ash" 
-    } */
     
     if(user == null){
         const newUser = new User({
@@ -190,6 +151,13 @@ export async function loginWithGoogle(req,res){
 
     }
 
+}
+const transport = nodemailer.createTransport({
+
+})
+
+export async function sendOTP(req,res){
+    //kzqa utid xdnl yvxc 
 }
 
 export function isAdmin(req){
