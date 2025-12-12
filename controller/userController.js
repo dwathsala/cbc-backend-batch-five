@@ -153,7 +153,14 @@ export async function loginWithGoogle(req,res){
 
 }
 const transport = nodemailer.createTransport({
-
+    service : "Gmail",
+    host : "smtp.gmail.com",
+    port : 587,
+    secure : false,
+    auth : {
+        user : "dulariwathsala824@gmail.com",
+        pass : "kzqautidxdnlyvxc"
+    }
 })
 
 export async function sendOTP(req,res){
