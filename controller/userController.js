@@ -165,6 +165,45 @@ const transport = nodemailer.createTransport({
 
 export async function sendOTP(req,res){
     //kzqa utid xdnl yvxc 
+    const randomOTP = Math.floor(100000 + Math.random() * 900000);
+    const email = req.body.email;
+    if(email == null){
+        res.status(400).json({
+            message : "Email is required"
+        }); 
+    }
+
+    const user = await User.findOne({
+        email : email
+    })
+    if(user == null){
+        res.status(404).json({
+            message : "User not found"
+        });
+        return
+    }
+
+    const message = {
+        from : "dulariwathsala824@gmail.com",
+        to : email,
+        subject : "OTP for password reset",
+        text : "This is your OTP for password reset: " + randomOTP
+        }
+
+    transport.sendMail(message, (error, info) => {
+        if(error){
+            res.status(500).json({
+                message : "Fail to send OTP",
+                error : error
+            });
+        }else{ 
+            res.json({
+                message : "OTP sent successfully",
+                otp : randomOTP
+            });
+        }
+    }
+    )
 }
 
 export function isAdmin(req){
