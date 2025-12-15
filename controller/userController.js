@@ -180,8 +180,13 @@ export async function sendOTP(req,res){
         res.status(404).json({
             message : "User not found"
         });
-        return
     }
+
+    //delete all previous OTPs
+    await OTP.deleteMany({
+        email : email
+    })
+
 
     const message = {
         from : "dulariwathsala824@gmail.com",
@@ -189,6 +194,13 @@ export async function sendOTP(req,res){
         subject : "OTP for password reset",
         text : "This is your OTP for password reset: " + randomOTP
         }
+
+    const otp = new otp({
+        email : email,
+        otp : randomOTP 
+    })
+
+    await otp.save();
 
     transport.sendMail(message, (error, info) => {
         if(error){
@@ -204,6 +216,40 @@ export async function sendOTP(req,res){
         }
     }
     )
+}
+
+export async function resetPassword(req,res){
+    const otp = req.body.otp;
+    const email = req.body.email;
+    const newPassword = req.body.newPassword;
+
+    const response = await otp.findOne({
+        email : email,
+    })
+    if(response == null){
+        res.status(500).json({
+            message : "OTP not found, please request a new one"
+        });
+    }
+    if(otp == response.otp){
+        await otp.deleteMany({
+            email : email
+        })
+
+        const hashedPassword = bcrypt.hashSync(newPassword,10)
+        const response2 = await User.updateOne(
+            {email : email},
+            {password : hashedPassword}
+        )
+        res.json({
+            message : "Password reset successful"
+        })
+
+    }else{
+        res.status(403).json({
+            message : "Invalid OTP"
+        })
+    }
 }
 
 export function isAdmin(req){
