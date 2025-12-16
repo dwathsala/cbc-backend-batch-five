@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from "axios";
 import nodemailer from "nodemailer";
-import OTP from "../models/otp.js";
+import OTP from "../models/otp.js";        
 dotenv.config();
 
 export function createUser(req,res){
@@ -14,9 +14,8 @@ export function createUser(req,res){
                 res.status(403).json({
                     message : "You are not authorized to create an admin, Please login first."
                 })
-                return  //return eka dammat user kenek awe nathi unm code eka run nowi block wenwa
+                return
             }
-
         }else{
             res.status(403).json({
                 message : "You are not authorized to create an admin, Please loging first."
@@ -36,10 +35,10 @@ export function createUser(req,res){
     })
 
     user.save()
-    .then(() => {res.json({ 
+    .then(() => {res.json({
         message: "User created successfully" })})
-    .catch((error) => {res.json({ 
-        error: error.message })});   
+    .catch((error) => {res.json({
+        error: error.message })});
 }
 
 export function loginUser(req,res){
@@ -64,10 +63,7 @@ export function loginUser(req,res){
                             img : user.img
                         },
                         process.env.JWT_KEY
-                         //password
                     )
-
-
 
                     res.json({
                         message : "Loging Successful",
@@ -83,33 +79,40 @@ export function loginUser(req,res){
         }
     )
 }
-//google login
+
 export async function loginWithGoogle(req,res){
     const token = req.body.accessToken;
-    if(token == null){ 
+    if(token == null){
         res.status(400).json({
             message : "Access token is null"
         });
         return
     }
+
     const response = await axios.get(
         `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
-    );  
-    console.log("Google Data: " , response.data); 
+    );
+    console.log(response.data);
 
-    //to check user is already in database
+    // Fallback names in case given_name / family_name missing
+    const email = response.data.email;
+    const emailName = email.split("@")[0];
+    const firstName = response.data.given_name || emailName;
+    const lastName  = response.data.family_name || "User";
+    const picture   = response.data.picture;
+
+    // check user is already in database
     const user = await User.findOne({
-        email : response.data.email
+        email : email
     })
-    
+
     if(user == null){
         const newUser = new User({
-            email : response.data.email,
-            //emailName : email.split("@")[0],
-            firstName : response.data.given_name ,
-            lastName : response.data.family_name ,
+            email : email,
+            firstName : firstName,
+            lastName : lastName,
             password : "googleUser",
-            img : response.data.picture
+            img : picture
         })
         await newUser.save();
         const token = jwt.sign(
@@ -127,7 +130,6 @@ export async function loginWithGoogle(req,res){
             token : token,
             role : newUser.role
         })
-
     }else{
         const token = jwt.sign(
             {
@@ -144,11 +146,9 @@ export async function loginWithGoogle(req,res){
             token : token,
             role : user.role
         })
-
-
     }
-
 }
+
 const transport = nodemailer.createTransport({
     service : "Gmail",
     host : "smtp.gmail.com",
@@ -161,13 +161,13 @@ const transport = nodemailer.createTransport({
 })
 
 export async function sendOTP(req,res){
-    //kzqa utid xdnl yvxc 
     const randomOTP = Math.floor(100000 + Math.random() * 900000);
     const email = req.body.email;
     if(email == null){
         res.status(400).json({
             message : "Email is required"
-        }); 
+        });
+        return;
     }
 
     const user = await User.findOne({
@@ -177,27 +177,27 @@ export async function sendOTP(req,res){
         res.status(404).json({
             message : "User not found"
         });
+        return;
     }
 
-    //delete all previous OTPs
+    // delete all previous OTPs
     await OTP.deleteMany({
         email : email
     })
-
 
     const message = {
         from : "dulariwathsala824@gmail.com",
         to : email,
         subject : "OTP for password reset",
         text : "This is your OTP for password reset: " + randomOTP
-        }
+    }
 
-    const otp = new OTP({
+    const otpDoc = new OTP({
         email : email,
-        otp : randomOTP 
+        otp : randomOTP
     })
 
-    await otp.save();
+    await otpDoc.save();
 
     transport.sendMail(message, (error, info) => {
         if(error){
@@ -205,48 +205,52 @@ export async function sendOTP(req,res){
                 message : "Fail to send OTP",
                 error : error
             });
-        }else{ 
+        }else{
             res.json({
                 message : "OTP sent successfully",
                 otp : randomOTP
             });
         }
-    }
-    )
+    })
 }
 
 export async function resetPassword(req,res){
-    const otp = req.body.otp;
+    const otp = req.body.otp;        // read "otp" from body
     const email = req.body.email;
     const newPassword = req.body.newPassword;
 
-    const response = await otp.findOne({
+    
+    const response = await OTP.findOne({
         email : email,
     })
+
     if(response == null){
-        res.status(500).json({
+        return res.status(500).json({
             message : "OTP not found, please request a new one"
         });
     }
-    if(otp == response.otp){
-        await OTP.deleteMany({
-            email : email
-        })
 
-        const hashedPassword = bcrypt.hashSync(newPassword,10)
-        const response2 = await User.updateOne(
-            {email : email},
-            {password : hashedPassword}
-        )
-        res.json({
-            message : "Password reset successful"
-        })
-
-    }else{
-        res.status(403).json({
+    // compare user otp with stored otp
+    if(otp != response.otp){
+        return res.status(403).json({
             message : "Invalid OTP"
         })
     }
+
+    // correct OTP
+    await OTP.deleteMany({
+        email : email
+    })
+
+    const hashedPassword = bcrypt.hashSync(newPassword,10)
+    await User.updateOne(
+        {email : email},
+        {password : hashedPassword}
+    )
+
+    return res.json({
+        message : "Password reset successful"
+    })
 }
 
 export function isAdmin(req){
