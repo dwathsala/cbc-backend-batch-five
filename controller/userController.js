@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from "axios";
 import nodemailer from "nodemailer";
+import OTP from "../models/otp.js";
 dotenv.config();
 
 export function createUser(req,res){
@@ -25,7 +26,6 @@ export function createUser(req,res){
     }
 
     const hashedPassword = bcrypt.hashSync(req.body.password,10)
-
 
     const user = new User({
         firstName : req.body.firstName,
@@ -92,14 +92,10 @@ export async function loginWithGoogle(req,res){
         });
         return
     }
-    const response = await axios.get("https://www.googleapis.com/oauth2/v3/tokeninfo",
-        {
-            headers : {
-                Authorization : `Bearer ${token}`
-            }
-        }
-    )  
-    console.log(response.data); 
+    const response = await axios.get(
+        `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
+    );  
+    console.log("Google Data: " , response.data); 
 
     //to check user is already in database
     const user = await User.findOne({
@@ -109,8 +105,9 @@ export async function loginWithGoogle(req,res){
     if(user == null){
         const newUser = new User({
             email : response.data.email,
-            firstName : response.data.given_name,
-            lastName : response.data.family_name,
+            //emailName : email.split("@")[0],
+            firstName : response.data.given_name ,
+            lastName : response.data.family_name ,
             password : "googleUser",
             img : response.data.picture
         })
@@ -195,7 +192,7 @@ export async function sendOTP(req,res){
         text : "This is your OTP for password reset: " + randomOTP
         }
 
-    const otp = new otp({
+    const otp = new OTP({
         email : email,
         otp : randomOTP 
     })
@@ -232,7 +229,7 @@ export async function resetPassword(req,res){
         });
     }
     if(otp == response.otp){
-        await otp.deleteMany({
+        await OTP.deleteMany({
             email : email
         })
 
