@@ -134,3 +134,28 @@ export async function getProductById(req,res){
         })
     }
 }
+
+export async function searchProducts(req,res){
+    const searchQuery = req.params.query
+    try{
+        //product.find is use to search all products in the database
+        const products = await Product.find({
+            //if anyone of below is correct, it will return the product
+            $or : [
+                //regex query is used to compare the two texts
+                //$option : 'i' is used to ignore case sensitivity
+                {name : {$regex : searchQuery, $options : 'i'}},
+
+                //elementMatch is used to compare the array elements like altNames
+                {altNames : {$elemMatch : {$regex : searchQuery, $options : 'i'}}},
+            ]
+        })
+        res.json(products) //send products to frontend
+
+    }catch(err){
+        res.status(500).json({
+            message : "Internal server error",
+            error : err
+        })
+    }
+}
