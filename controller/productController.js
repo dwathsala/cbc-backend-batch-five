@@ -148,7 +148,8 @@ export async function searchProducts(req,res){
 
                 //elementMatch is used to compare the array elements like altNames
                 {altNames : {$elemMatch : {$regex : searchQuery, $options : 'i'}}},
-            ]
+            ],
+            isAvailable : true //only available products will be searched
         })
         res.json(products) //send products to frontend
 
